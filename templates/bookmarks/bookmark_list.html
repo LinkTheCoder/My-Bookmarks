@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Bookmarks</title>
+    <script>
+        function populateForm(title, url, id) {
+            document.querySelector('input[name="title"]').value = title;
+            document.querySelector('input[name="url"]').value = url;
+            document.querySelector('form.main-form').action = `/edit/${id}/`;
+            document.querySelector('form.main-form button[type="submit"]').innerText = 'Update';
+
+            // Hide only the delete button of the bookmark being edited
+            const deleteForm = document.querySelector(`.delete-form-${id}`);
+            if (deleteForm) {
+                const deleteButton = deleteForm.querySelector('button[type="submit"]');
+                if (deleteButton) deleteButton.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Bookmarks</h1>
+    <ul>
+        {% for bookmark in bookmarks %}
+            <li>
+                <a href="{{ bookmark.url }}" target="_blank">{{ bookmark.title }}</a>
+                {% if bookmark.category %} ({{ bookmark.category.name }}) {% endif %}
+                
+                <form method="post" action="{% url 'delete_bookmark' bookmark.id %}" style="display:inline;" class="delete-form-{{ bookmark.id }}">
+                    {% csrf_token %}
+                    <button type="submit">Delete</button>
+                </form>
+
+                <button onclick="populateForm('{{ bookmark.title }}', '{{ bookmark.url }}', {{ bookmark.id }})">Edit</button>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <form method="post" 
+          class="main-form" 
+          action="{% if editing_bookmark %}{% url 'edit_bookmark' editing_bookmark.id %}{% else %}{% url 'bookmark_list' %}{% endif %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% if editing_bookmark %}Update{% else %}Add{% endif %}</button>
+    </form>
+</body>
+</html>
